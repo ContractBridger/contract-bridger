@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/ContractBridger/contract-bridger/issues"
   },
-  "homepage": "https://github.com/ContractBridger/contract-bridger#readme"
+  "homepage": "https://github.com/ContractBridger/contract-bridger#readme",
+  "dependencies": {
+    "typescript": "^5.2.2"
+  }
 }
