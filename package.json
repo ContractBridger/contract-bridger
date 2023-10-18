@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/ContractBridger/contract-bridger#readme",
   "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.11",
     "typescript": "^5.2.2"
   }
 }
