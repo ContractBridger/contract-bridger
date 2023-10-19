@@ -8,31 +8,31 @@ const fs = require('fs');
 require("dotenv").config();
 
 
-async function pullContractDetailFromSourceChain(contractAddress: string, etherscanAPIKey: string): {contractName: string, compilerVersion: string, sourceCode: any, optimizationUsed: number, runs: number }{
+export async function pullContractDetailFromSourceChain(contractAddress: string, etherscanAPIKey: string): Promise< {contractName: string, compilerVersion: any, optimizationUsed: any, runs: any,sourceCode: any}>{
   const res = await axios.get('https://api.etherscan.io/api?module=contract&action=getsourcecode&address='+contractAddress+'&apikey='+etherscanAPIKey);
  
   const dataResponse = res.data.result[0];
-  const sourceCode = dataResponse.SourceCode
-  const contractName = dataResponse.ContractName
-  const compilerVersion= dataResponse.compilerVersion
-  const optimizationUsed= dataResponse.OptimizationUsed 
-  const runs = dataResponse.Runs
+  const sourceCode : any = dataResponse.SourceCode
+  const contractName : string = dataResponse.ContractName
+  const compilerVersion : any= dataResponse.compilerVersion
+  const optimizationUsed : any= dataResponse.OptimizationUsed 
+  const runs: any = dataResponse.Runs
 
 
-  return{ contractName, compilerVersion, sourceCode, optimizationUsed, runs }
+  return { contractName, compilerVersion, optimizationUsed, runs, sourceCode}
 
    
  };
 
  
-async function compileContract(){
-    fs.writeFile(contractName+'.sol', sourceCode, async function (err:any) {
+export async function compileContract(contractName: string, sourceCode:any ): Promise<any>{
+    await fs.writeFile(contractName+'.sol', sourceCode, async function (err:any) {
         if (err) throw err;
         console.log('File is created successfully.');
     
     
         // //create source file from solc to compile
-         const source = fs.readFileSync('./'+contractName+'.sol', 'UTF-8');
+         const source = await fs.readFileSync('./'+contractName+'.sol', 'UTF-8');
        
     
          const input = {
@@ -49,11 +49,15 @@ async function compileContract(){
                 }
               }
             }
-          };
+          }
     
         //   //compile contract
-         const output = JSON.parse(solc.compile(JSON.stringify(input)));
+         const output = JSON.parse(solc.compile(JSON.stringify(input)))
          const byteCodeAfterCompilation = output.contracts['NADO.sol'].NADO.evm.bytecode.object
-}
+
+         return byteCodeAfterCompilation       
+})}
+
+
 
 
