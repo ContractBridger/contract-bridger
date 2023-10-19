@@ -1,32 +1,33 @@
 import axios from 'axios';
-import fs from 'fs';
+
 
 
 const solc = require('solc');
+const fs = require('fs');
 
 require("dotenv").config();
 
 
 async function pullContractDetailFromSourceChain(contractAddress: string, etherscanAPIKey: string){
   const res = await axios.get('https://api.etherscan.io/api?module=contract&action=getsourcecode&address='+contractAddress+'&apikey='+etherscanAPIKey);
-  console.log(JSON.stringify(res), "res")
-  const sourceCode = res.data.result[0].SourceCode
-  const contractName = res.data.result[0].ContractName
+ 
+  const dataResponse = res.data.result[0];
+  const sourceCode = dataResponse.SourceCode
+  const contractName = dataResponse.ContractName
+  const compilerVersion= dataResponse.compilerVersion
+  const optimizationUsed= dataResponse.OptimizationUsed 
+  const runs = dataResponse.Runs
+  
 
-//   console.log(res.data.result[0], "checking")
-
-    // writeFile function with filename, content and callback function
+   // writeFile function with filename, content and callback function
 fs.writeFile(contractName+'.sol', sourceCode, async function (err:any) {
     if (err) throw err;
     console.log('File is created successfully.');
 
 
-    //create source file from solc to compile
+    // //create source file from solc to compile
      const source = fs.readFileSync('./'+contractName+'.sol', 'UTF-8');
-
-
-     const res = solc.compile(source, 1).contracts;
-     console.log(res, "res")
+   
 
      const input = {
         language: 'Solidity',
@@ -44,15 +45,15 @@ fs.writeFile(contractName+'.sol', sourceCode, async function (err:any) {
         }
       };
 
-      //compile contract
+    //   //compile contract
      const output = JSON.parse(solc.compile(JSON.stringify(input)));
-    // console.log(output.contracts, "output")
-    // console.log('deleting file after use')
-    fs.unlinkSync('./contract.sol');
+     const byteCodeAfterCompilation = output.contracts['NADO.sol'].NADO.evm.bytecode.object
+    // // console.log('deleting file after use')
+    // fs.unlinkSync('./contract.sol');
 
-    //TODO: define return params
+   // TODO: define return params
    
-  });
+ });
 
  
 
