@@ -25,7 +25,9 @@ export async function pullContractDetailFromSourceChain(contractAddress: string,
  };
 
  
-export async function compileContract(contractName: string, sourceCode:any ): Promise<any>{
+export async function compileContract(contractName: string, sourceCode:any ): Promise< any>{
+   
+   let byteCodeAfterCompilation;
     await fs.writeFile(contractName+'.sol', sourceCode, async function (err:any) {
         if (err) throw err;
         console.log('File is created successfully.');
@@ -53,10 +55,17 @@ export async function compileContract(contractName: string, sourceCode:any ): Pr
     
         //   //compile contract
          const output = JSON.parse(solc.compile(JSON.stringify(input)))
-         const byteCodeAfterCompilation = output.contracts['NADO.sol'].NADO.evm.bytecode.object
+         
+          byteCodeAfterCompilation = output.contracts['NADO.sol'].NADO.evm.bytecode.object
+          console.log(byteCodeAfterCompilation, "testing again")
+         
 
-         return byteCodeAfterCompilation       
-})}
+               
+    })
+    
+    return byteCodeAfterCompilation
+    
+}
 
 
 
