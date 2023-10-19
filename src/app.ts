@@ -1,13 +1,17 @@
-import http from 'http';
+import express, { Express, Request, Response } from 'express';
 
-const host = 'localhost';
-const port = 8000;
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app: Express = express();
+const port = process.env.PORT;
 
 
-
-const requestListener = function (req, res) {};
-
-const server = http.createServer(requestListener);
-server.listen(port, host, () => {
-    console.log(`Server is running on http://${host}:${port}`);
+app.get('/', (req: Request, res: Response) => {
+    res.send('');
 });
+
+app.listen(port, () => {
+    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+ });
