@@ -1,24 +1,43 @@
 import express from 'express';
+import axios from 'axios';
+import { pullContractDetailFromSourceChain, compileContract } from './util/util'; // Import your utility functions
 const routes = express.Router();
 
 // Dummy data for demonstration purposes.
 const smartContracts = [
-  { name: 'Contract1', address: '0x123456789', sourceCode: '...your source code...' },
-  { name: 'Contract2', address: '0x987654321', sourceCode: '...your source code...' },
+  { name: 'Contract1', address: '0x123456789' },
+  { name: 'Contract2', address: '0x987654321' },
 ];
 
 // Endpoint to pull smart contracts
-routes.get('/smart-contracts', (_, res) => {
-  res.json({ success: true, smartContracts });
+routes.get('/smart-contracts', async (req, res) => {
+  try {
+    // Fetch smart contract details using the utility function
+    const etherscanAPIKey = process.env.ETHERSCAN_API_KEY;
+    const contractDetails = await Promise.all(
+      smartContracts.map(async (contract) => {
+        return pullContractDetailFromSourceChain(contract.address, etherscanAPIKey);
+      })
+    );
+
+    res.json({ success: true, smartContracts: contractDetails });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-// Endpoint to compile bytecode (dummy implementation)
-routes.post('/compile-bytecode', (req, res) => {
-  // Typically we can send the source code to a compiler and return the compiled bytecode.
-  const sourceCode = req.body.sourceCode;
-  const bytecode = '0xcompiledbytecode'; // I'd replace with tha  actual compilation logic.
+// Endpoint to compile bytecode
+routes.post('/compile-bytecode', async (req, res) => {
+  try {
+    const { contractName, sourceCode } = req.body;
 
-  res.json({ success: true, bytecode });
+    // Compile the contract using the utility function
+    const bytecode = await compileContract(contractName, sourceCode);
+
+    res.json({ success: true, bytecode });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 export default routes;
