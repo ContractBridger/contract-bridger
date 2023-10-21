@@ -28,9 +28,12 @@ routes.post("/compile-contract", async (req, res) => {
         const { contractName, sourceCode } = req.body;
 
         // Compile the contract using the utility function
-        const bytecode = await compileContract(contractName, sourceCode);
+        const { bytecode, ABI } = await compileContract(
+            contractName,
+            sourceCode
+        );
 
-        res.json({ success: true, bytecode });
+        res.status(200).json({ bytecode, ABI });
     } catch (error: any) {
         res.status(500).json({
             success: false,
