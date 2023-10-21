@@ -1,6 +1,5 @@
 import express from 'express';
-import axios from 'axios';
-import { pullContractDetailFromSourceChain, compileContract } from './util/util'; // Import your utility functions
+import { pullContractDetailFromSourceChain, compileContract } from './utils/index';
 const routes = express.Router();
 
 // Dummy data for demonstration purposes.
@@ -20,7 +19,7 @@ routes.get('/smart-contracts', async (req, res) => {
       })
     );
 
-    res.json({ success: true, smartContracts: contractDetails });
+    res.json({ success: true, smartContracts: contractDetails });  
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
