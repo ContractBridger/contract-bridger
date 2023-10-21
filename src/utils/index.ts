@@ -67,7 +67,6 @@ export async function compileContract(
     let byteCodeAfterCompilation;
     const hasLicenseIdentifier = sourceCode.search("SPDX-License-Identifier");
     let fixedCode;
-    console.log("hasLicenseIdentifier: ", hasLicenseIdentifier);
 
     if (hasLicenseIdentifier === -1) {
         fixedCode = "// SPDX-License-Identifier: MIT\n".concat(sourceCode);
@@ -75,45 +74,36 @@ export async function compileContract(
         fixedCode = sourceCode;
     }
 
-    await fs.writeFile(
-        contractName + ".sol",
-        fixedCode,
-        async function (err: any) {
-            if (err) throw err;
-            console.log("File is created successfully.");
-
-            // //create source file from solc to compile
-            const source = await fs.readFileSync(
-                "./" + contractName + ".sol",
-                "UTF-8"
-            );
-
-            const input = {
-                language: "Solidity",
-                sources: {
-                    [contractName + ".sol"]: {
-                        content: source,
-                    },
+    const input = {
+        language: "Solidity",
+        sources: {
+            [contractName + ".sol"]: {
+                content: fixedCode,
+            },
+        },
+        settings: {
+            outputSelection: {
+                "*": {
+                    "*": ["*"],
                 },
-                settings: {
-                    outputSelection: {
-                        "*": {
-                            "*": ["*"],
-                        },
-                    },
-                },
-            };
+            },
+        },
+    };
 
-            //   //compile contract
-            const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    //   //compile contract
+    const output = JSON.parse(solc.compile(JSON.stringify(input)));
 
-            console.log(output);
-
-            byteCodeAfterCompilation =
-                output.contracts["NADO.sol"].NADO.evm.bytecode.object;
-            console.log(byteCodeAfterCompilation, "testing again");
-        }
+    console.log("aaaaa: ", output.contracts);
+    console.log(
+        "zzzzz: ",
+        output.contracts[contractName + ".sol"][contractName]
     );
 
-    return byteCodeAfterCompilation;
+    byteCodeAfterCompilation =
+        output.contracts[contractName + ".sol"][contractName].evm.bytecode
+            .object;
+
+    const ABI = output.contracts[contractName + ".sol"][contractName].abi;
+
+    return { bytecode: byteCodeAfterCompilation, ABI };
 }
