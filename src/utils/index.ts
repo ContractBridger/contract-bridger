@@ -1,7 +1,10 @@
 import axios from "axios";
-
 const solc = require("solc");
 const fs = require("fs");
+
+
+
+
 
 require("dotenv").config();
 
@@ -127,3 +130,76 @@ export async function compileContract(
 
     return { bytecode: byteCodeAfterCompilation, ABI };
 }
+
+export async function verifyContract(contractAddress: string, contractName: string, chainId: number, optimizationUsed: string, sourceCode: any, compilerVersion: any, codeformat: any){
+
+    let chainExplorerString: string = "";
+    let apikey: any = "";
+
+    //mainnet
+    if (chainId == 1) {
+        chainExplorerString = "api.etherscan.io";
+        apikey = process.env.ETHERSCAN_API_KEY;
+    }
+    // sepolia
+    else if (chainId == 11155111) {
+        chainExplorerString = "api-sepolia.etherscan.io";
+        apikey = process.env.ETHERSCAN_API_KEY;
+    }
+
+    // goerli
+    else if (chainId == 5) {
+        chainExplorerString = "api-goerli.etherscan.io";
+        apikey = process.env.ETHERSCAN_API_KEY;
+    }
+
+    // bsc
+    else if (chainId == 56) {
+        chainExplorerString = "api.bscscan.com";
+        apikey = process.env.BSC_API_KEY;
+    }
+
+    // bsc testnet
+    else if (chainId == 97) {
+        chainExplorerString = "api-testnet.bscscan.com";
+        apikey = process.env.BSC_API_KEY;
+    } else if (chainId == 137) {
+        //polygon
+        chainExplorerString = "api.polygonscan.com";
+        apikey = process.env.POLYGON_API_KEY;
+    }
+
+    console.log("Attempting to verify contracts");
+
+    const url = "https://" + chainExplorerString + "/api";
+    const data = new URLSearchParams();
+    data.append("module", "contract");
+    data.append("action", "verifysourcecode");
+    data.append("address", contractAddress);
+    data.append("contractname", contractName);
+
+    // use 0 for no optimization, and 1 if optimization was used
+    data.append("optimizationUsed", optimizationUsed);
+    data.append("apikey", apikey);
+    data.append('sourceCode', sourceCode);
+    data.append('compilerversion', compilerVersion);
+    // solidity-single-file by default, or solidity-standard-json-input
+    data.append('codeformat', codeformat);
+
+    try {
+        const res = await axios.post(url, data, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        });
+
+        // Handle the response here.
+        console.log("Verification Response:", res.data);
+    } catch (error) {
+        console.error("Error while verifying contract:", error);
+    }
+ }
+
+
+
+
