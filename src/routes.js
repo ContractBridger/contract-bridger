@@ -8,22 +8,23 @@ const smartContracts = [
   { name: 'Contract2', address: '0x987654321' },
 ];
 
-// Endpoint to pull smart contracts
 routes.get('/smart-contracts', async (req, res) => {
   try {
-    // Fetch smart contract details using the utility function
-    const etherscanAPIKey = process.env.ETHERSCAN_API_KEY;
-    const contractDetails = await Promise.all(
-      smartContracts.map(async (contract) => {
-        return pullContractDetailFromSourceChain(contract.address, etherscanAPIKey);
-      })
-    );
+    const contractAddress = req.query.contractAddress;
 
-    res.json({ success: true, smartContracts: contractDetails });  
+    if (!contractAddress) {
+      return res.status(400).json({ success: false, message: 'Contract address is required' });
+    }
+
+    const etherscanAPIKey = process.env.ETHERSCAN_API_KEY;
+    const contractDetails = await pullContractDetailFromSourceChain(contractAddress, etherscanAPIKey);
+
+    res.json({ success: true, contractDetails });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 // Endpoint to compile bytecode
 routes.post('/compile-bytecode', async (req, res) => {
