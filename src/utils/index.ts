@@ -84,27 +84,57 @@ export async function pullContractDetailFromSourceChain(
     };
 }
 
+// export async function compileContract(
+//     contractName: string,
+//     sourceCode: any
+// ): Promise<any> {
+//     let byteCodeAfterCompilation;
+//     const hasLicenseIdentifier = sourceCode.search("SPDX-License-Identifier");
+//     let fixedCode;
+
+//     if (hasLicenseIdentifier === -1) {
+//         fixedCode = "// SPDX-License-Identifier: MIT\n".concat(sourceCode);
+//     } else {
+//         fixedCode = sourceCode;
+//     }
+
+//     const input = {
+//         language: "Solidity",
+//         sources: {
+//             [contractName + ".sol"]: {
+//                 content: fixedCode,
+//             },
+//         },
+//         settings: {
+//             outputSelection: {
+//                 "*": {
+//                     "*": ["*"],
+//                 },
+//             },
+//         },
+//     };
+
+//     //   //compile contract
+//     const output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+//     console.log("res: ", output);
+
+//     byteCodeAfterCompilation =
+//         output.contracts[contractName + ".sol"][contractName].evm.bytecode
+//             .object;
+
+//     const ABI = output.contracts[contractName + ".sol"][contractName].abi;
+
+//     return { bytecode: byteCodeAfterCompilation, ABI };
+// }
+
+
 export async function compileContract(
-    contractName: string,
-    sourceCode: any
-): Promise<any> {
-    let byteCodeAfterCompilation;
-    const hasLicenseIdentifier = sourceCode.search("SPDX-License-Identifier");
-    let fixedCode;
-
-    if (hasLicenseIdentifier === -1) {
-        fixedCode = "// SPDX-License-Identifier: MIT\n".concat(sourceCode);
-    } else {
-        fixedCode = sourceCode;
-    }
-
+    sourceCode: string
+): Promise<{ [contractName: string]: { bytecode: string; ABI: any } }> {
     const input = {
         language: "Solidity",
-        sources: {
-            [contractName + ".sol"]: {
-                content: fixedCode,
-            },
-        },
+        sources: {} as { [key: string]: { content: string } },
         settings: {
             outputSelection: {
                 "*": {
@@ -114,16 +144,38 @@ export async function compileContract(
         },
     };
 
-    //   //compile contract
+    const contracts = sourceCode.split(/(?=^pragma solidity)/m);
+
+    for (const contract of contracts) {
+        const pragmaMatch = contract.match(/^pragma solidity .+;/);
+        if (pragmaMatch) {
+            const pragma = pragmaMatch[0];
+            const contractNameMatch = contract.match(/contract (\w+)/);
+            if (contractNameMatch) {
+                const contractName = contractNameMatch[1];
+                input.sources[`${contractName}.sol`] = {
+                    content: pragma + '\n' + contract,
+                };
+            }
+        }
+    }
+
     const output = JSON.parse(solc.compile(JSON.stringify(input)));
 
-    console.log("res: ", output);
+    const contractData: { [contractName: string]: { bytecode: string; ABI: any } } = {};
+    for (const sourceName in input.sources) {
+        for (const contractName in output.contracts[sourceName]) {
+            contractData[contractName] = {
+                bytecode: output.contracts[sourceName][contractName].evm.bytecode.object,
+                ABI: output.contracts[sourceName][contractName].abi,
+            };
+        }
+    }
 
-    byteCodeAfterCompilation =
-        output.contracts[contractName + ".sol"][contractName].evm.bytecode
-            .object;
-
-    const ABI = output.contracts[contractName + ".sol"][contractName].abi;
-
-    return { bytecode: byteCodeAfterCompilation, ABI };
+    return contractData;
 }
+
+
+
+
+
