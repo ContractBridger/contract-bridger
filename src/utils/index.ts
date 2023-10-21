@@ -8,13 +8,16 @@ require("dotenv").config();
 export async function pullContractDetailFromSourceChain(
     contractAddress: string,
     chainId: number
-): Promise<{
-    contractName: string;
-    compilerVersion: any;
-    optimizationUsed: any;
-    runs: any;
-    sourceCode: any;
-}> {
+): Promise<
+    | {
+          contractName: string;
+          compilerVersion: any;
+          optimizationUsed: any;
+          runs: any;
+          sourceCode: any;
+      }
+    | "SOURCE_CODE_NOT_FOUND"
+> {
     let chainExplorerString: string = "";
     let apikey: any = "";
 
@@ -22,10 +25,28 @@ export async function pullContractDetailFromSourceChain(
     if (chainId == 1) {
         chainExplorerString = "api.etherscan.io";
         apikey = process.env.ETHERSCAN_API_KEY;
+    }
+    // sepolia
+    else if (chainId == 11155111) {
+        chainExplorerString = "api-sepolia.etherscan.io";
+        apikey = process.env.ETHERSCAN_API_KEY;
+    }
 
-        //bsc
-    } else if (chainId == 56) {
+    // goerli
+    else if (chainId == 5) {
+        chainExplorerString = "api-goerli.etherscan.io";
+        apikey = process.env.ETHERSCAN_API_KEY;
+    }
+
+    // bsc
+    else if (chainId == 56) {
         chainExplorerString = "api.bscscan.com";
+        apikey = process.env.BSC_API_KEY;
+    }
+
+    // bsc testnet
+    else if (chainId == 97) {
+        chainExplorerString = "api-testnet.bscscan.com";
         apikey = process.env.BSC_API_KEY;
     } else if (chainId == 137) {
         //polygon
@@ -41,9 +62,12 @@ export async function pullContractDetailFromSourceChain(
             "&apikey=" +
             apikey
     );
-    // console.log(res, "res in func", apikey);
+
     const dataResponse = res.data.result[0];
-    console.log(dataResponse);
+
+    if (dataResponse.ABI === "Contract source code not verified") {
+        return "SOURCE_CODE_NOT_FOUND";
+    }
 
     const sourceCode: any = dataResponse.SourceCode;
     const contractName: string = dataResponse.ContractName;
@@ -93,11 +117,7 @@ export async function compileContract(
     //   //compile contract
     const output = JSON.parse(solc.compile(JSON.stringify(input)));
 
-    console.log("aaaaa: ", output.contracts);
-    console.log(
-        "zzzzz: ",
-        output.contracts[contractName + ".sol"][contractName]
-    );
+    console.log("res: ", output);
 
     byteCodeAfterCompilation =
         output.contracts[contractName + ".sol"][contractName].evm.bytecode
