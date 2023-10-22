@@ -5,6 +5,23 @@ const fs = require("fs");
 
 require("dotenv").config();
 
+function removeSPDXLicenseIdentifiers(code: string) {
+    const pattern = /\/\/ SPDX-License-Identifier:.*/g;
+    const codeWithoutImports = code.replace(pattern, "");
+
+    return codeWithoutImports;
+}
+
+function removeImportStatements(code: string) {
+    // Define the regular expression pattern for import statements
+    const pattern = /^\s*import\s.*;$/gm;
+
+    // Use replace to remove import statements
+    const codeWithoutImports = code.replace(pattern, "");
+
+    return codeWithoutImports;
+}
+
 export async function pullContractDetailFromSourceChain(
     contractAddress: string,
     chainId: number
@@ -97,6 +114,10 @@ export async function compileContract(
     } else {
         fixedCode = sourceCode;
     }
+
+    // // incase it is a multiple file contract that is flattend
+    // fixedCode = removeImportStatements(fixedCode);
+    // fixedCode = removeSPDXLicenseIdentifiers(fixedCode);
 
     const input = {
         language: "Solidity",
