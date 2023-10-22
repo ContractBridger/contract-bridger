@@ -1,5 +1,9 @@
 import express from "express";
-import { pullContractDetailFromSourceChain, compileContract } from "./utils"; // Import your utility functions
+import {
+    pullContractDetailFromSourceChain,
+    compileContract,
+    verifyContract,
+} from "./utils"; // Import your utility functions
 const routes = express.Router();
 
 // Endpoint to pull smart contracts
@@ -40,6 +44,32 @@ routes.post("/compile-contract", async (req, res) => {
             error: error.message || "error compiling contract",
         });
     }
+});
+
+routes.post("verify-contract", async (req, res) => {
+    try {
+        const {
+            contractAddress,
+            contractName,
+            chainId,
+            optimizationUsed,
+            sourceCode,
+            compilerVersion,
+            codeformat,
+        } = req.body;
+
+        const data = await verifyContract(
+            contractAddress,
+            contractName,
+            chainId,
+            optimizationUsed,
+            sourceCode,
+            compilerVersion,
+            codeformat
+        );
+
+        res.send("done");
+    } catch (error) {}
 });
 
 export default routes;
